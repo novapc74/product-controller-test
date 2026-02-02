@@ -89,4 +89,12 @@ final class ProductController extends AbstractController
 
         return new JsonResponse(null, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+
+    #[Route('/product/{id}', name: 'app_update_product', requirements: ['id' => '\d+'], methods: ['DELETE'])]
+    public function destroyProduct(Product $product): JsonResponse
+    {
+       $this->service->deleteProduct($product);
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
 }

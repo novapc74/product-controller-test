@@ -66,4 +66,11 @@ readonly class ProductService
         $this->entityManager->flush();
         return $this->getProductById($product->getId());
     }
+
+    public function deleteProduct(Product $product): void
+    {
+        #TODO так как у товара нет связей, то просто сносим, ничего не проверяем...
+        $this->entityManager->remove($product);
+        $this->entityManager->flush();
+    }
 }
