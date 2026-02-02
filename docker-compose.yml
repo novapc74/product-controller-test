@@ -1,0 +1,59 @@
+services:
+    nginx:
+        restart: always
+        container_name: ${APP_NAME}-nginx
+        build:
+            context: docker
+            dockerfile: nginx/Dockerfile
+        ports:
+            - "8033:80"
+        volumes:
+            - ./project:/project
+        depends_on:
+            - php-fpm
+            - php-cli
+        networks:
+            - web-php-symfony-server
+
+    php-fpm:
+        container_name: ${APP_NAME}-php-fpm
+        build:
+            context: docker
+            dockerfile: php-fpm/Dockerfile
+        ports:
+            - "9000:9000"
+        volumes:
+            - ./project:/project
+        networks:
+            - web-php-symfony-server
+
+    php-cli:
+        container_name: ${APP_NAME}-php-cli
+        build:
+            context: docker
+            dockerfile: php-cli/Dockerfile
+        volumes:
+            - ./project:/project
+        networks:
+            - web-php-symfony-server
+
+    maria-db:
+        restart: always
+        image: mariadb:11.8.2
+        container_name: ${APP_NAME}-maria-db
+        volumes:
+            - ./volumes/database/mysql://var/lib/mysql
+        ports:
+            - "3333:3306"
+        command: [ '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci' ]
+        environment:
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+        networks:
+            - web-php-symfony-server
+
+networks:
+    web-php-symfony-server:
+        external: true
