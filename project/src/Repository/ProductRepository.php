@@ -34,7 +34,7 @@ class ProductRepository extends ServiceEntityRepository
             $types['search'] = ParameterType::STRING;
         }
 
-        return (int) $this->getEntityManager()
+        return (int)$this->getEntityManager()
             ->getConnection()
             ->fetchOne($sql, $params, $types);
     }

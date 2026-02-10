@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ProductRepository;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,7 +20,10 @@ class Product
     #[ORM\Column(length: 255, unique: true)]
     private ?string $name = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(
+        nullable: true,
+        options: ["unsigned" => true, "check" => "price >= 0"]
+    )]
     #[Assert\PositiveOrZero]
     private ?int $price = null;
 
@@ -61,8 +65,15 @@ class Product
         return $this->price;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function setPrice(?int $price): static
     {
+        if ($price !== null && $price < 0) {
+            throw new InvalidArgumentException('Цена не может быть отрицательной');
+        }
+
         $this->price = $price;
 
         return $this;

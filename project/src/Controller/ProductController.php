@@ -28,14 +28,9 @@ final class ProductController extends AbstractController
      * @throws Exception
      */
     #[Route('/product', name: 'app_product')]
-    public function index(Request $request, #[MapQueryString] ?ProductSearchDto $dto = null): JsonResponse
+    public function index(#[MapQueryString] ?ProductSearchDto $dto = null): JsonResponse
     {
-        $paginator = new Paginator($request, Product::PER_PAGE);
-        $dto ??= new ProductSearchDto();
-
-        return $this->json(
-            $this->service->getAllProducts($dto, $paginator)
-        );
+        return $this->json($this->service->getAllProducts($dto ?? new ProductSearchDto()));
     }
 
     /**
