@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
-#TODO добавить Monolog для логирования ошибок пря тут...
+#TODO добавить Monolog для логирования ошибок прям тут...
 class ExceptionListener
 {
     /**
@@ -25,7 +25,7 @@ class ExceptionListener
             'success' => false,
         ];
 
-        // 1. Обработка ошибок валидации (от #[MapRequestPayload])
+        /** 1. Обработка ошибок валидации (от #[MapRequestPayload]) */
         if ($exception instanceof UnprocessableEntityHttpException &&
             $exception->getPrevious() instanceof ValidationFailedException) {
 
@@ -39,11 +39,11 @@ class ExceptionListener
             }
 
             $response->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY);
-        } // 2. Обработка HTTP исключений (404, 403 и т.д.)
+        } /** 2. Обработка HTTP исключений (404, 403 и т.д.) */
         elseif ($exception instanceof HttpExceptionInterface) {
             $data['message'] = $exception->getMessage();
             $response->setStatusCode($exception->getStatusCode());
-        } // 3. Критические ошибки сервера (500)
+        } /** 3. Критические ошибки сервера (500, и т.д.) */
         else {
             $data['message'] = 'Server error';
             #TODO добавить дев режим ...
