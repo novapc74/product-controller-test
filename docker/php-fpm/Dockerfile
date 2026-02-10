@@ -2,7 +2,7 @@ FROM php:8.4-fpm-alpine
 
 RUN mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
 
-COPY ./embed/php/conf.d $PHP_INI_DIR/conf.d
+COPY docker/embed/php/conf.d $PHP_INI_DIR/conf.d
 
 RUN apk update && apk add --no-cache \
         git \
@@ -19,8 +19,14 @@ RUN apk update && apk add --no-cache \
         libzip-dev \
         libwebp-dev \
         freetype-dev \
+        linux-headers \
     && docker-php-ext-install pdo pdo_mysql zip intl \
     && rm -rf /var/cache/apk/*
+
+RUN apk add --no-cache $PHPIZE_DEPS \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && rm -rf /tmp/pear
 
 WORKDIR /project
 

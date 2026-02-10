@@ -2,18 +2,23 @@
 
 namespace App\Service;
 
-use App\Dto\ProductPatchDto;
-use App\Dto\ProductPostDto;
 use App\Entity\Product;
+use App\Dto\ProductPostDto;
+use App\Dto\ProductPatchDto;
 use Doctrine\DBAL\Exception;
+use App\Dto\ProductSearchDto;
+use App\Service\Paginator\Paginator;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\Paginator\PaginatorResponseDto;
 
 readonly class ProductService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private ProductRepository      $productRepository)
+        private ProductRepository      $productRepository,
+        private Paginator              $paginator
+    )
     {
     }
 
@@ -28,13 +33,15 @@ readonly class ProductService
     /**
      * @throws Exception
      */
-    public function getAllProducts(): array
+    public function getAllProducts(ProductSearchDto $dto): array
     {
-        #TODO тут пагинацию нужно добавить в простом виде через LIMIT/OFFSET и колличество страниц
-        # решается в два запроса
-        # 1. первый получаем количество для вычисдления OFFSET (...?page=)
-        # 2. сам запрос...
-        return $this->productRepository->getAllProducts();
+        $count = $this->productRepository->getProductCountBySearch($dto);
+
+        $collection = $this->productRepository->getProductsBySearch($this->paginator, $dto);
+
+        return PaginatorResponseDto::response(
+            $this->paginator->paginate($collection, $count)
+        );
     }
 
     /**

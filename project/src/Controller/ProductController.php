@@ -2,15 +2,17 @@
 
 namespace App\Controller;
 
-use App\Dto\ProductPatchDto;
-use App\Dto\ProductPostDto;
 use App\Entity\Product;
+use App\Dto\ProductPostDto;
 use Doctrine\DBAL\Exception;
+use App\Dto\ProductPatchDto;
+use App\Dto\ProductSearchDto;
 use App\Service\ProductService;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class ProductController extends AbstractController
@@ -20,17 +22,16 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/product', name: 'app_product')]
-    public function index(): JsonResponse
+    public function index(#[MapQueryString] ?ProductSearchDto $dto = null): JsonResponse
     {
         try {
-            $products = $this->service->getAllProducts();
 
-            return new JsonResponse(
-                json_encode($products, JSON_UNESCAPED_UNICODE), Response::HTTP_OK, [], true
+            return $this->json(
+                $this->service->getAllProducts($dto ?? new ProductSearchDto())
             );
-        } catch (Exception $exception) {
-            #TODO ошибку и метод в логер ...
-            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+        } catch (Exception $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -39,16 +40,17 @@ final class ProductController extends AbstractController
     {
         try {
             if ($productData = $this->service->getProductById($id)) {
-                return new JsonResponse(
-                    json_encode($productData, JSON_UNESCAPED_UNICODE), Response::HTTP_OK, [], true
-                );
+                return $this->json([
+                    'product' => $productData,
+                ]);
             }
-        } catch (Exception $exception) {
+        } catch (Exception $e) {
             #TODO ошибку и метод в логер ...
-            return new JsonResponse('server error', Response::HTTP_INTERNAL_SERVER_ERROR);
+            # на время тестирования ... потом убрать ошибку сервера...
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        return $this->json(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/product/create', name: 'app_create_product', methods: ['POST'])]
@@ -58,43 +60,47 @@ final class ProductController extends AbstractController
     {
         try {
             if ($productData = $this->service->createNewProduct($productPostDto)) {
-                return new JsonResponse(
-                    json_encode($productData, JSON_UNESCAPED_UNICODE), Response::HTTP_OK, [], true
-                );
+                return $this->json([
+                    'product' => $productData,
+                ]);
             }
         } catch (Exception $exception) {
             #TODO ошибку и метод в логер ...
-            return new JsonResponse('server error', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json([
+                'error' => $exception->getMessage(),
+            ]);
         }
 
-        return new JsonResponse(null, Response::HTTP_UNPROCESSABLE_ENTITY);
+        return $this->json(null, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     #[Route('/product/{id}', name: 'app_update_product', requirements: ['id' => '\d+'], methods: ['PATCH'])]
     public function updateProduct(
         #[MapRequestPayload] ProductPatchDto $productPatchDto,
-        Product $product
+        Product                              $product
     ): JsonResponse
     {
         try {
             if ($productData = $this->service->updateProduct($product, $productPatchDto)) {
-                return new JsonResponse(
-                    json_encode($productData, JSON_UNESCAPED_UNICODE), Response::HTTP_OK, [], true
-                );
+                return $this->json([
+                    'product' => $productData,
+                ]);
             }
         } catch (Exception $exception) {
-            #TODO ошибку и метод в логер ...
-            return new JsonResponse('server error', Response::HTTP_INTERNAL_SERVER_ERROR);
+            #TODO ошибку и метод в логер ... потом убрать вывод ошибки клиенту...
+            return $this->json([
+                'error' => $exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR
+            ]);
         }
 
-        return new JsonResponse(null, Response::HTTP_UNPROCESSABLE_ENTITY);
+        return $this->json(null, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    #[Route('/product/{id}', name: 'app_update_product', requirements: ['id' => '\d+'], methods: ['DELETE'])]
+    #[Route('/product/{id}', name: 'app_delete_product', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function destroyProduct(Product $product): JsonResponse
     {
-       $this->service->deleteProduct($product);
+        $this->service->deleteProduct($product);
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

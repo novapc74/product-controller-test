@@ -1,14 +1,14 @@
 doctrine:
     dbal:
-#        url: '%env(resolve:DATABASE_URL)%'
+        url: '%env(resolve:DATABASE_URL)%'
 
         driver: 'pdo_mysql'
         charset: utf8mb4
-        host: '%env(DATABASE_HOST)%'
-        port: '%env(DATABASE_PORT)%'
-        user: '%env(MYSQL_USER)%'
-        password: '%env(MYSQL_PASSWORD)%'
-        dbname: '%env(MYSQL_DATABASE)%'
+#        host: '%env(DATABASE_HOST)%'
+#        port: '%env(DATABASE_PORT)%'
+#        user: '%env(MYSQL_USER)%'
+#        password: '%env(MYSQL_PASSWORD)%'
+#        dbname: '%env(MYSQL_DATABASE)%'
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
@@ -31,9 +31,9 @@ when@test:
     doctrine:
         dbal:
             # "TEST_TOKEN" is typically set by ParaTest
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
-            driver: 'pdo_sqlite'
-            memory: true
+            # dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+            # driver: 'pdo_sqlite'
+            # memory: true
 #            url: 'sqlite:///:memory:'
 
 when@prod:

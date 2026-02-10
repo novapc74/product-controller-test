@@ -4,7 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Product;
 use Doctrine\DBAL\Exception;
+use App\Dto\ProductSearchDto;
 use Doctrine\DBAL\ParameterType;
+use App\Service\Paginator\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
@@ -21,37 +23,54 @@ class ProductRepository extends ServiceEntityRepository
     /**
      * @throws Exception
      */
-    public function getAllProducts(?int $limit = 24, ?int $offset = 0): array
+    public function getProductCountBySearch(ProductSearchDto $dto): int
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $params = $types = [];
+        $sql = 'SELECT COUNT(*) FROM product -- search area';
 
-        $sql = '
+        if ($search = $dto->search) {
+            $sql = str_replace('-- search area', ' WHERE LOWER(name) LIKE :search', $sql);
+            $params['search'] = "%$search%";
+            $types['search'] = ParameterType::STRING;
+        }
+
+        return (int) $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne($sql, $params, $types);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getProductsBySearch(Paginator $paginator, ProductSearchDto $dto): array
+    {
+        $params = $types = [];
+        $conn = $this->getEntityManager()->getConnection();
+        $sortDirection = $dto->sort_direction;
+
+        $sql = "
         SELECT 
             id,
             name,
             price,
             status,
-            DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at 
-        FROM product p
-        LIMIT :limit
-        OFFSET :offset
-    ';
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at 
+        FROM product p -- search area
+        ORDER BY name $sortDirection
+    ";
+
+        if ($search = $dto->search) {
+            $sql = str_replace('-- search area', ' WHERE LOWER(name) LIKE :search', $sql);
+            $params['search'] = "%$search%";
+            $types['search'] = ParameterType::STRING;
+        }
+
+        $paginator->paginateSql($sql);
 
         return $conn
-            ->executeQuery(
-                $sql,
-                [
-                    'limit' => $limit,
-                    'offset' => $offset
-                ],
-                [
-                    'limit' => ParameterType::INTEGER,
-                    'offset' => ParameterType::INTEGER
-                ]
-            )
+            ->executeQuery($sql, $params, $types)
             ->fetchAllAssociative();
     }
-
 
     /**
      * @throws Exception

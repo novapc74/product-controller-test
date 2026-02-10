@@ -10,7 +10,7 @@ MYSQL_USER=dev
 MYSQL_DATABASE=dev
 MARIADB_ROOT_PASSWORD=root
 ```
-### в консоли выподлните команды:
+### в консоли выполните команды:
 ```
 make create_network
 make init

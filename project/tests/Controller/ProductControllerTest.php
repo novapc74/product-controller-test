@@ -3,19 +3,40 @@
 namespace App\Tests\Controller;
 
 use App\Service\ProductService;
+use LogicException;
+use PHPUnit\Event\NoPreviousThrowableException;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
 final class ProductControllerTest extends WebTestCase
 {
-    private function getMockService()
+
+    /**
+     * @throws NoPreviousThrowableException
+     * @throws Exception
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     */
+    private function getMockService(): MockObject
     {
         return $this->createMock(ProductService::class);
     }
 
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     * @throws Exception
+     * @throws LogicException
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     * @throws ExpectationFailedException
+     */
     public function testShowProductSuccess(): void
     {
-        $client = static::createClient();
+        $client = ProductControllerTest::createClient();
         $mockService = $this->getMockService();
 
         $mockService->expects($this->once())
@@ -23,57 +44,81 @@ final class ProductControllerTest extends WebTestCase
             ->with(123)
             ->willReturn(['id' => 123, 'name' => 'Тестовый товар']);
 
-        static::getContainer()->set(ProductService::class, $mockService);
+        ProductControllerTest::getContainer()->set(ProductService::class, $mockService);
 
         $client->request('GET', '/product/123');
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonStringEqualsJsonString(
-            json_encode(['id' => 123, 'name' => 'Тестовый товар']),
+            json_encode([ 'product' => ['id' => 123, 'name' => 'Тестовый товар']]),
             $client->getResponse()->getContent()
         );
     }
 
+    /**
+     * @throws LogicException
+     */
     public function testShowProductInvalidId(): void
     {
-        $client = static::createClient();
+        $client = ProductControllerTest::createClient();
 
         $client->request('GET', '/product/abc');
 
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     * @throws LogicException
+     * @throws Exception
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     * @throws ExpectationFailedException
+     */
     public function testIndexSuccess(): void
     {
-        $client = static::createClient();
-        $mock = $this->createMock(ProductService::class);
-        $mock->method('getAllProducts')->willReturn([
-            ['id' => 1]
-            ,
-            ['id' => 2]
-        ]);
+        $client = ProductControllerTest::createClient();
 
-        $client->getContainer()->set(ProductService::class, $mock);
+        // 1. Создаем "двойника" сервиса
+        $serviceMock = $this->getMockService();
 
+        // 2. Настраиваем его: при вызове getAllProducts вернуть пустой массив
+        $serviceMock->method('getAllProducts')
+            ->willReturn([]);
+
+        // 3. Заменяем реальный сервис в контейнере Symfony на наш Mock
+        ProductControllerTest::getContainer()->set(ProductService::class, $serviceMock);
+
+        // 4. Выполняем запрос
         $client->request('GET', '/product');
 
         $this->assertResponseIsSuccessful();
-        $this->assertJson($client->getResponse()->getContent());
+        $this->assertResponseHeaderSame('Content-Type', 'application/json');
+        $this->assertEquals('[]', $client->getResponse()->getContent());
     }
 
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws NoPreviousThrowableException
+     * @throws LogicException
+     * @throws Exception
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     * @throws ExpectationFailedException
+     */
     public function testCreateProductSuccess(): void
     {
-        $client = static::createClient();
+        $client = ProductControllerTest::createClient();
 
-        $mock = $this->createMock(ProductService::class);
-
+        $mock = $this->getMockService();
         $productData = ['id' => 1, 'name' => 'Новый товар'];
 
         $mock->expects($this->once())
             ->method('createNewProduct')
             ->willReturn($productData);
 
-        $client->getContainer()->set(ProductService::class, $mock);
+        // Важно: берем контейнер именно так
+        ProductControllerTest::getContainer()->set(ProductService::class, $mock);
 
         $client->request(
             'POST',
@@ -88,11 +133,10 @@ final class ProductControllerTest extends WebTestCase
             ])
         );
 
-        $this->assertResponseStatusCodeSame(200);
+        $this->assertResponseIsSuccessful();
         $this->assertJsonStringEqualsJsonString(
-            json_encode($productData),
+            json_encode(['product' => $productData]),
             $client->getResponse()->getContent()
         );
     }
-
 }

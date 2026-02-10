@@ -10,6 +10,7 @@ class ProductPostDto
         #[Assert\Length(min: 3, max: 255)]
         public string $name,
 
+        #[Assert\PositiveOrZero(message: "Значение должно быть позитивным или 0")]
         public ?int  $price,
 
         #[Assert\Choice([false, true])]
