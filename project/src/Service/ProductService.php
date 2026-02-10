@@ -5,9 +5,9 @@ namespace App\Service;
 use App\Entity\Product;
 use App\Dto\ProductPostDto;
 use App\Dto\ProductPatchDto;
+use App\Service\Paginator\PaginatorInterface;
 use Doctrine\DBAL\Exception;
 use App\Dto\ProductSearchDto;
-use App\Service\Paginator\Paginator;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Paginator\PaginatorResponseDto;
@@ -16,8 +16,7 @@ readonly class ProductService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private ProductRepository      $productRepository,
-        private Paginator              $paginator
+        private ProductRepository      $productRepository
     )
     {
     }
@@ -33,14 +32,14 @@ readonly class ProductService
     /**
      * @throws Exception
      */
-    public function getAllProducts(ProductSearchDto $dto): array
+    public function getAllProducts(ProductSearchDto $dto, PaginatorInterface $paginator): array
     {
         $count = $this->productRepository->getProductCountBySearch($dto);
 
-        $collection = $this->productRepository->getProductsBySearch($this->paginator, $dto);
+        $collection = $this->productRepository->getProductsBySearch($paginator, $dto);
 
         return PaginatorResponseDto::response(
-            $this->paginator->paginate($collection, $count)
+            $paginator->paginate($collection, $count)
         );
     }
 

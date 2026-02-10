@@ -24,5 +24,8 @@ bin/console doctrine:fixtures:load --no-interaction
 ```
 #### Тесты
 ```
+php bin/console doctrine:database:create --env=test
+php bin/console doctrine:migrations:migrate --env=test -n
+php bin/console doctrine:fixtures:load --env=test -n
 php bin/phpunit
 ```

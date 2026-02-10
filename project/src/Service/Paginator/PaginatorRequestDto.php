@@ -6,8 +6,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 readonly class PaginatorRequestDto
 {
-    private const int LIMIT_PER_PAGE = 24;
-
     public function __construct(
         private int $page,
         private int $limit,
@@ -15,12 +13,12 @@ readonly class PaginatorRequestDto
     {
     }
 
-    public static function fromRequest(Request $request): self
+    public static function fromRequest(Request $request, int $limit): self
     {
         $pageFromRequest = $request->get('page', 1);
         $page = max($pageFromRequest, 1);
 
-        $limitFromRequest = $request->get('limit', self::LIMIT_PER_PAGE);
+        $limitFromRequest = $request->get('limit', $limit);
         $limit = min(max($limitFromRequest, 1), 48);
 
         return new self($page, $limit);

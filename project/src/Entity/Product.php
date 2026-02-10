@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {
-    public const int PER_PAGE = 10;
+    public const int PER_PAGE = 12;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

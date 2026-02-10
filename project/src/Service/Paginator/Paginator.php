@@ -4,23 +4,24 @@ namespace App\Service\Paginator;
 
 use RuntimeException;
 use Doctrine\ORM\QueryBuilder;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Request;
 
 class Paginator implements PaginatorInterface
 {
+    private const int LIMIT_PER_PAGE = 24;
+
     private int $count = 0;
     private array $items = [];
 
     private PaginatorRequestDto $requestDto;
 
     /**
-     * @param RequestStack $requestStack
+     * @param Request $request
+     * @param int|null $limit
      */
-    public function __construct(private readonly RequestStack $requestStack)
+    public function __construct(private readonly Request $request, ?int $limit = self::LIMIT_PER_PAGE)
     {
-        $this->requestDto = PaginatorRequestDto::fromRequest(
-            $this->requestStack->getCurrentRequest()
-        );
+        $this->requestDto = PaginatorRequestDto::fromRequest($this->request, $limit);
     }
 
     public function getPage(): int
