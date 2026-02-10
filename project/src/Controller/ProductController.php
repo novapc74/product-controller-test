@@ -8,8 +8,6 @@ use Doctrine\DBAL\Exception;
 use App\Dto\ProductPatchDto;
 use App\Dto\ProductSearchDto;
 use App\Service\ProductService;
-use App\Service\Paginator\Paginator;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +16,10 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * Добавлен App\EventListener\ExceptionListener.php
+ * для перехвата ошибок и избавления от try-catch структуры в контроллере.
+ */
 final class ProductController extends AbstractController
 {
     public function __construct(private readonly ProductService $service)

@@ -7,6 +7,7 @@ use App\Dto\ProductPostDto;
 use App\Dto\ProductPatchDto;
 use Doctrine\DBAL\Exception;
 use App\Dto\ProductSearchDto;
+use InvalidArgumentException;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Paginator\PaginatorInterface;
@@ -47,6 +48,7 @@ readonly class ProductService
 
     /**
      * @throws Exception
+     * @throws InvalidArgumentException
      */
     public function createNewProduct(ProductPostDto $productPostDto): array
     {
@@ -61,7 +63,9 @@ readonly class ProductService
         return $this->getProductById($product->getId());
     }
 
+
     /**
+     * @throws InvalidArgumentException
      * @throws Exception
      */
     public function updateProduct(Product $product, ProductPatchDto $productPatchDto): array
@@ -77,7 +81,6 @@ readonly class ProductService
 
     public function deleteProduct(Product $product): void
     {
-        #TODO так как у товара нет связей, то просто сносим, ничего не проверяем...
         $this->entityManager->remove($product);
         $this->entityManager->flush();
     }
