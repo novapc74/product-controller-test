@@ -16,7 +16,7 @@ class ExceptionListener
     /**
      * @throws InvalidArgumentException
      */
-    public function onKernelException(ExceptionEvent $event): void
+    public function __invoke(ExceptionEvent $event): void
     {
         $exception = $event->getThrowable();
         $response = new JsonResponse();
@@ -39,22 +39,20 @@ class ExceptionListener
             }
 
             $response->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY);
-            $response->setData($data);
         } // 2. Обработка HTTP исключений (404, 403 и т.д.)
         elseif ($exception instanceof HttpExceptionInterface) {
             $data['message'] = $exception->getMessage();
             $response->setStatusCode($exception->getStatusCode());
-            $response->setData($data);
         } // 3. Критические ошибки сервера (500)
         else {
             $data['message'] = 'Server error';
             #TODO добавить дев режим ...
-             $data['debug'] = $exception->getMessage();
+            $data['debug'] = $exception->getMessage();
 
             $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
-            $response->setData($data);
         }
 
+        $response->setData($data);
         $event->setResponse($response);
     }
 }
